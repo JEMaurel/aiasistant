@@ -1,0 +1,5 @@
+{
+  "name": "AI Assistant",
+  "description": "A simple web application to ask questions to a powerful AI model and receive instant answers. Built with React, TypeScript, and the Gemini API.",
+  "requestFramePermissions": []
+}
