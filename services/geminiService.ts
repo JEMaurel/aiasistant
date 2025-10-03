@@ -1,13 +1,14 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 if (!process.env.API_KEY) {
-  // In a real application, you'd want to handle this more gracefully.
-  // For this environment, we assume the key is present.
-  console.warn("API_KEY environment variable not set. Using a placeholder.");
+  // This warning helps developers during setup. The app will fail with a
+  // clear error message if the key is missing or invalid.
+  console.warn("API_KEY environment variable not set. The application will fail to connect to the AI service.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "YOUR_API_KEY_HERE" });
+// Initialize the AI client with the key from the environment.
+// Do not use a fallback key here; it's better to fail clearly.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Sends a prompt to the Gemini API and returns the response.
@@ -29,7 +30,11 @@ export const askAI = async (prompt: string): Promise<string> => {
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error) {
-        throw new Error(`Failed to get response from AI. Please check your API key and network connection. Details: ${error.message}`);
+        // Provide more specific feedback for common API key issues.
+        if (error.message.includes("API key not valid")) {
+            throw new Error("The API key is invalid. Please ensure the API_KEY environment variable is set correctly.");
+        }
+        throw new Error(`Failed to get response from AI. Please check your network connection and API key permissions. Details: ${error.message}`);
     }
     throw new Error("An unknown error occurred while communicating with the AI.");
   }
