@@ -5,8 +5,13 @@ import LoadingSpinner from './LoadingSpinner';
 import ResponseDisplay from './ResponseDisplay';
 import ErrorDisplay from './ErrorDisplay';
 import SendIcon from './icons/SendIcon';
+import { Appointment } from '../App';
 
-const ChatInterface: React.FC = () => {
+interface ChatInterfaceProps {
+  appointments: Appointment[];
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ appointments }) => {
   const [prompt, setPrompt] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -21,7 +26,19 @@ const ChatInterface: React.FC = () => {
     setResponse('');
 
     try {
-      const aiResponse = await askAI(prompt);
+      // Create context with the current appointments
+      const appointmentsContext = appointments.length > 0 
+        ? JSON.stringify(appointments) 
+        : "No hay citas programadas.";
+      
+      const fullPrompt = `Teniendo en cuenta la siguiente agenda de pacientes, responde a mi pregunta. La fecha y hora actual para referencia es ${new Date().toISOString()}.
+
+Mi agenda (en formato JSON):
+${appointmentsContext}
+
+Mi pregunta: "${prompt}"`;
+
+      const aiResponse = await askAI(fullPrompt);
       setResponse(aiResponse);
     } catch (err) {
       if (err instanceof Error) {
@@ -32,7 +49,7 @@ const ChatInterface: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [prompt, isLoading]);
+  }, [prompt, isLoading, appointments]);
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-950/50">
@@ -40,7 +57,7 @@ const ChatInterface: React.FC = () => {
         AI Assistant
       </h1>
       <p className="text-center text-slate-400 mb-8">
-        Ask me anything, and I'll do my best to answer.
+        Puedes preguntarme sobre tu agenda de pacientes.
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -48,7 +65,7 @@ const ChatInterface: React.FC = () => {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g., Explain quantum computing in simple terms..."
+            placeholder="Ej: ¿Quién es mi próximo paciente?"
             className="w-full h-28 p-4 pr-16 bg-slate-700/50 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow resize-none"
             disabled={isLoading}
             onKeyDown={(e) => {
@@ -73,7 +90,7 @@ const ChatInterface: React.FC = () => {
         {isLoading && (
             <div className="flex items-center justify-center space-x-2 text-slate-400">
                 <LoadingSpinner />
-                <span>Thinking...</span>
+                <span>Pensando...</span>
             </div>
         )}
         {error && <ErrorDisplay message={error} />}
