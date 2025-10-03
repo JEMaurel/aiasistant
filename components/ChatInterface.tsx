@@ -57,7 +57,7 @@ Mi pregunta: "${prompt}"`;
         AI Assistant
       </h1>
       <p className="text-center text-slate-400 mb-8">
-        Puedes preguntarme sobre tu agenda de pacientes.
+        Puedes preguntarme sobre tu agenda de pacientes. ¡Estoy para ayudarte!
       </p>
 
       <form onSubmit={handleSubmit}>
