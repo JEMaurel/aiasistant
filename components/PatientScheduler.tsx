@@ -2,6 +2,7 @@
 import React, { useState, FormEvent } from 'react';
 import TrashIcon from './icons/TrashIcon';
 import { Appointment } from '../App';
+import Calendar from './Calendar';
 
 interface PatientSchedulerProps {
   appointments: Appointment[];
@@ -12,6 +13,7 @@ const PatientScheduler: React.FC<PatientSchedulerProps> = ({ appointments, setAp
   const [patientName, setPatientName] = useState('');
   const [appointmentDateTime, setAppointmentDateTime] = useState('');
   const [visitReason, setVisitReason] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,15 @@ const PatientScheduler: React.FC<PatientSchedulerProps> = ({ appointments, setAp
   const handleDelete = (id: number) => {
     setAppointments(prev => prev.filter(app => app.id !== id));
   };
+  
+  const filteredAppointments = selectedDate
+    ? appointments.filter(app => {
+        const appDate = new Date(app.dateTime);
+        return appDate.getDate() === selectedDate.getDate() &&
+               appDate.getMonth() === selectedDate.getMonth() &&
+               appDate.getFullYear() === selectedDate.getFullYear();
+      })
+    : appointments;
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-950/50">
@@ -85,13 +96,37 @@ const PatientScheduler: React.FC<PatientSchedulerProps> = ({ appointments, setAp
         </button>
       </form>
 
+      <Calendar 
+        appointments={appointments} 
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+      />
+
       <div>
-        <h2 className="text-xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">Citas Programadas</h2>
+        <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+            <h2 className="text-xl font-bold text-slate-200">
+                {selectedDate 
+                ? `Citas para el ${selectedDate.toLocaleDateString('es-ES')}` 
+                : 'Próximas Citas'}
+            </h2>
+            {selectedDate && (
+                <button 
+                onClick={() => setSelectedDate(null)}
+                className="text-sm text-sky-400 hover:text-sky-300 transition-colors"
+                >
+                Mostrar todas
+                </button>
+            )}
+        </div>
         {appointments.length === 0 ? (
           <p className="text-center text-slate-500 py-8">Aún no hay citas programadas.</p>
+        ) : filteredAppointments.length === 0 ? (
+            <p className="text-center text-slate-500 py-8">
+              No hay citas programadas para {selectedDate ? `el ${selectedDate.toLocaleDateString('es-ES')}` : 'este día'}.
+            </p>
         ) : (
           <ul className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {appointments.map(app => (
+            {filteredAppointments.map(app => (
               <li key={app.id} className="bg-slate-700/30 border border-slate-700 rounded-xl p-4 flex justify-between items-start">
                 <div>
                   <p className="font-bold text-sky-400">{app.name}</p>
